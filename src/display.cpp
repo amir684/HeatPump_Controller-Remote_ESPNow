@@ -119,10 +119,10 @@ static void drawMainScreen() {
     // Each line: value in font_6x10, °C suffix in font_5x7
     auto drawRightLine = [&](int y, const char* valStr) {
         u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(84, y, valStr);
+        u8g2.drawStr(80, y, valStr);
         int w = u8g2.getStrWidth(valStr);
         u8g2.setFont(u8g2_font_5x7_tr);
-        u8g2.drawStr(84 + w + 2, y, "\xb0""C");
+        u8g2.drawStr(80 + w + 2, y, "\xb0""C");
     };
 
     snprintf(buf, sizeof(buf), "Sp:%d", (int)roundf(s.setpoint));
@@ -133,7 +133,7 @@ static void drawMainScreen() {
         drawRightLine(33, buf);
     } else {
         u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(84, 33, "Ot:E04");
+        u8g2.drawStr(80, 33, "Ot:E04");
     }
 
     if (d.pipeOk) {
@@ -141,7 +141,7 @@ static void drawMainScreen() {
         drawRightLine(44, buf);
     } else {
         u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(84, 44, "Pp:E02");
+        u8g2.drawStr(80, 44, "Pp:E02");
     }
 
     // ── BOTTOM BAR: relay status + mode + defrost ───────────
