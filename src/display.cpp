@@ -126,22 +126,30 @@ static void drawMainScreen() {
     };
 
     snprintf(buf, sizeof(buf), "Sp:%d", (int)roundf(s.setpoint));
-    drawRightLine(22, buf);
+    drawRightLine(21, buf);
 
     if (d.outdoorOk) {
         snprintf(buf, sizeof(buf), "Ot:%.1f", d.outdoor);
-        drawRightLine(33, buf);
+        drawRightLine(29, buf);
     } else {
         u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(80, 33, "Ot:E04");
+        u8g2.drawStr(80, 29, "Ot:E04");
     }
 
     if (d.pipeOk) {
         snprintf(buf, sizeof(buf), "Pp:%.1f", d.pipe);
-        drawRightLine(44, buf);
+        drawRightLine(37, buf);
     } else {
         u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.drawStr(80, 44, "Pp:E02");
+        u8g2.drawStr(80, 37, "Pp:E02");
+    }
+
+    if (d.exhaustOk) {
+        snprintf(buf, sizeof(buf), "Ex:%.1f", d.exhaust);
+        drawRightLine(45, buf);
+    } else {
+        u8g2.setFont(u8g2_font_6x10_tr);
+        u8g2.drawStr(80, 45, "Ex:E03");
     }
 
     // ── BOTTOM BAR: relay status + mode + defrost ───────────
