@@ -74,9 +74,8 @@ static const char* PARAM_NAMES[] = {
     "U51 Exh.Temp",
     "U52 Antifreeze",
     "U80 Auto Restart",
-    "U81 Keypad Lock",
 };
-static const int PARAM_COUNT = 12;
+static const int PARAM_COUNT = 11;
 
 // ── Helpers ────────────────────────────────────────────────
 static void goTo(Screen s) {
@@ -124,7 +123,6 @@ static void loadParam(int id) {
     case 8:  g_edit.fVal=s.u51; g_edit.fMin=50;   g_edit.fMax=125; g_edit.fStep=1.0f; goTo(Screen::EDIT_FLOAT); break;
     case 9:  g_edit.iVal=s.u52; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
     case 10: g_edit.iVal=s.u80; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
-    case 11: g_edit.iVal=s.u81; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
     }
 }
 
@@ -142,7 +140,6 @@ static void saveParam() {
     case 8:  s.u51=g_edit.fVal; break;
     case 9:  s.u52=(uint8_t)g_edit.iVal; break;
     case 10: s.u80=(uint8_t)g_edit.iVal; break;
-    case 11: s.u81=(uint8_t)g_edit.iVal; break;
     case 100: s.setpoint=g_edit.fVal; break;
     case 201: s.mqttPort=(uint16_t)g_edit.iVal; break;
     }
@@ -367,15 +364,6 @@ void menuInit() {
 void menuLoop() {
     Settings& s = settingsGet();
     uint32_t  now = millis();
-
-    // Keypad locked
-    if (s.u81 == 1) {
-        if (Buttons.longPress(BTN_ENTER)) {
-            s.u81 = 0; settingsSave();
-            displayShowMessage("Unlocked!", nullptr, nullptr); delay(600);
-        }
-        return;
-    }
 
     // POWER long press: toggle on/off from anywhere
     if (Buttons.longPress(BTN_POWER)) {

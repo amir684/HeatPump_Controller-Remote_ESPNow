@@ -104,5 +104,4 @@
 #define DEF_U51       110.0f   // exhaust protection temperature
 #define DEF_U52             1  // antifreeze enable
 #define DEF_U80             0  // auto restart
-#define DEF_U81             0  // keypad lock
 #define DEF_MQTT_PORT    1883

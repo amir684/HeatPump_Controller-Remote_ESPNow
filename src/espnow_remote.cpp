@@ -120,7 +120,6 @@ void espnowSendSettings() {
     pkt.u51          = s.u51;
     pkt.u52          = s.u52;
     pkt.u80          = s.u80;
-    pkt.u81          = s.u81;
     pkt.workMode     = s.workMode;
     pkt.systemOnline = s.systemOnline;
     for (int i = 0; i < 3; i++) {

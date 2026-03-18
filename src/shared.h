@@ -76,7 +76,6 @@ struct SettingsPacket {
     float    u51;
     uint8_t  u52;
     uint8_t  u80;
-    uint8_t  u81;
     uint8_t  workMode;
     bool     systemOnline;
     // 3 heating periods

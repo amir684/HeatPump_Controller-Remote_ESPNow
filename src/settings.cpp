@@ -19,7 +19,6 @@ static void applyDefaults() {
     g_settings.u51         = DEF_U51;
     g_settings.u52         = DEF_U52;
     g_settings.u80         = DEF_U80;
-    g_settings.u81         = DEF_U81;
     g_settings.workMode    = 0;
     g_settings.systemOnline = false;
 
@@ -56,7 +55,6 @@ void settingsLoad() {
     g_settings.u51         = prefs.getFloat("u51",  DEF_U51);
     g_settings.u52         = prefs.getUChar("u52",  DEF_U52);
     g_settings.u80         = prefs.getUChar("u80",  DEF_U80);
-    g_settings.u81         = prefs.getUChar("u81",  DEF_U81);
     g_settings.workMode    = prefs.getUChar("mode", 0);
     g_settings.systemOnline= prefs.getBool("online", false);
 
@@ -85,7 +83,6 @@ void settingsSave() {
     prefs.putFloat("u51",   g_settings.u51);
     prefs.putUChar("u52",   g_settings.u52);
     prefs.putUChar("u80",   g_settings.u80);
-    prefs.putUChar("u81",   g_settings.u81);
     prefs.putUChar("mode",  g_settings.workMode);
     prefs.putBool("online", g_settings.systemOnline);
 

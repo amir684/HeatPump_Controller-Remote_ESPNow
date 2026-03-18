@@ -50,7 +50,6 @@ static bool validateAndApplySettings(const SettingsPacket& pkt) {
     s.u51      = clamp(pkt.u51,      50.0f, 125.0f);
     s.u52      = clamp(pkt.u52,      (uint8_t)0,   (uint8_t)1);
     s.u80      = clamp(pkt.u80,      (uint8_t)0,   (uint8_t)1);
-    s.u81      = clamp(pkt.u81,      (uint8_t)0,   (uint8_t)1);
     s.workMode = clamp(pkt.workMode, (uint8_t)0,   (uint8_t)1);
     s.systemOnline = pkt.systemOnline;
 

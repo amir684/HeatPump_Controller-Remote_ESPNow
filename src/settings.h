@@ -33,7 +33,6 @@ struct Settings {
     // ── System ───────────────────────────────────────────
     uint8_t u52;          // Antifreeze: 0=off, 1=on
     uint8_t u80;          // Auto restart: 0=off, 1=on
-    uint8_t u81;          // Keypad lock: 0=off, 1=on
 
     // ── Work mode ────────────────────────────────────────
     uint8_t workMode;     // 0=AUTO, 1=SAVE
