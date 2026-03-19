@@ -7,6 +7,7 @@
 #include "shared.h"
 #include "settings.h"
 #include "espnow_remote.h"
+#include "buzzer.h"
 #include <Arduino.h>
 
 static HpStatus g_status{};
@@ -16,6 +17,9 @@ extern void remoteUpdateSensors(const StatusPacket& pkt);
 
 // Called by espnow_remote.cpp when a StatusPacket arrives
 void remoteUpdateStatus(const StatusPacket& pkt) {
+    HpState prevState = g_status.state;
+    HpError prevError = g_status.error;
+
     remoteUpdateSensors(pkt);
     g_status.state          = static_cast<HpState>(pkt.state);
     g_status.error          = static_cast<HpError>(pkt.error);
@@ -26,6 +30,11 @@ void remoteUpdateStatus(const StatusPacket& pkt) {
     g_status.heating        = pkt.heating;
     g_status.compRunMinutes = pkt.compRunMinutes;
     g_status.defrostCount   = pkt.defrostCount;
+
+    // Trigger alarm on new fault
+    bool newError   = (g_status.error != HpError::NONE && prevError == HpError::NONE);
+    bool newProtect = (g_status.state == HpState::EXHAUST_PROTECT && prevState != HpState::EXHAUST_PROTECT);
+    if (newError || newProtect) buzzerAlarm();
 }
 
 // ── control.h interface ─────────────────────────────────────

@@ -15,6 +15,7 @@
 #include "espnow_remote.h"
 #include "control.h"    // proxy (control_remote.cpp)
 #include "sensors.h"    // proxy (sensors_remote.cpp)
+#include "buzzer.h"
 
 static uint32_t g_lastDisplay = 0;
 static uint32_t g_lastMqtt    = 0;
@@ -34,6 +35,7 @@ void setup() {
     settingsInit();
     // sensorsInit/relaysInit/controlInit are no-ops in proxy implementations
 
+    buzzerInit();
     displayInit();
     Buttons.begin();
     xTaskCreatePinnedToCore(buttonTask, "buttons", 2048, NULL, 5, NULL, 1);
@@ -62,6 +64,7 @@ void loop() {
         espnowSendSettings();
     }
 
+    buzzerLoop();
     menuLoop();
     espnowRemoteLoop();
     wifiMqttLoop();

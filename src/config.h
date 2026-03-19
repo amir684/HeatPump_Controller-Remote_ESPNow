@@ -27,7 +27,7 @@
 #define LCD_BL_PIN  32    // Backlight (PWM)
 
 // Backlight PWM settings
-#define LCD_BL_CHANNEL   0        // LEDC channel (0-15)
+#define LCD_BL_CHANNEL   0        // LEDC channel — timer 0
 #define LCD_BL_FREQ      5000     // PWM frequency Hz
 #define LCD_BL_RES       8        // 8-bit resolution (0-255)
 #define LCD_BL_DEFAULT    55      // brightness on startup (active-LOW: low=bright)
@@ -53,6 +53,9 @@
 #define PIN_BTN_DOWN    22   // Navigate down / decrement
 #define PIN_BTN_ENTER   21   // Confirm / enter submenu
 #define PIN_BTN_BACK    13   // Back / cancel
+
+// ── Buzzer ──────────────────────────────────────────────────
+#define PIN_BUZZER       4   // Passive speaker via NPN transistor
 
 // ── NTC Parameters ─────────────────────────────────────────
 #define NTC_SERIES_R    10000.0f  // Series resistor value (Ohms)

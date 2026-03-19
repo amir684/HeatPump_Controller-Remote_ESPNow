@@ -1,4 +1,5 @@
 #include "buttons.h"
+#include "buzzer.h"
 
 const uint8_t ButtonManager::PINS[BTN_COUNT] = {
     PIN_BTN_POWER, PIN_BTN_UP, PIN_BTN_DOWN, PIN_BTN_ENTER, PIN_BTN_BACK
@@ -39,6 +40,7 @@ void ButtonManager::update() {
 
         if (stable && !_stable[i]) {
             // Freshly pressed
+            buzzerClick();
             _pressMs[i]    = now;
             _shortFired[i] = false;
             _longFired[i]  = false;
