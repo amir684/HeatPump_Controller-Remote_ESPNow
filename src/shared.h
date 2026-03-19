@@ -7,7 +7,7 @@
 
 // ── MAC addresses ──────────────────────────────────────────
 #define CTRL_MAC_BYTES   { 0x00, 0x70, 0x07, 0x25, 0x08, 0x74 }
-#define REMOTE_MAC_BYTES { 0x00, 0x70, 0x07, 0x25, 0x70, 0xF0 }
+#define REMOTE_MAC_BYTES { 0xE8, 0x6B, 0xEA, 0xD4, 0x59, 0xD8 }
 
 // ── WiFi channel ───────────────────────────────────────────
 // Must match the router channel the Remote connects to.

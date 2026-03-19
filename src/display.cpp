@@ -10,7 +10,7 @@
 
 // ST7567 128x64 Hardware SPI.
 // SPI.begin() is called manually with MISO=-1 so GPIO19 (UP button) is NOT claimed.
-static U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(U8G2_R0, LCD_CS_PIN, LCD_DC_PIN, LCD_RST_PIN);
+static U8G2_ST7567_JLX12864_F_4W_HW_SPI u8g2(U8G2_R2, LCD_CS_PIN, LCD_DC_PIN, LCD_RST_PIN);
 
 static bool     g_inMenu       = false;
 static char     g_toastLine1[24] = {};

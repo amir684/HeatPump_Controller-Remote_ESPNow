@@ -1,6 +1,7 @@
 #include "espnow_remote.h"
 #include "shared.h"
 #include "settings.h"
+#include "buzzer.h"
 #include <WiFi.h>
 #include <esp_now.h>
 
@@ -71,6 +72,7 @@ void espnowRemoteLoop() {
         g_sendFailed = false;
         if (!g_defrostPending) {
             displayToast("Send failed", "Will retry...", 3000);
+            buzzerCommFail();
         }
     }
 

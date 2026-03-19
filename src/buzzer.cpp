@@ -7,20 +7,33 @@
 #define BUZ_RES      8     // 8-bit resolution
 #define BUZ_DUTY   128     // 50% duty cycle
 
-// ── Alarm melody (non-blocking) ────────────────────────────
 struct Note { uint16_t freq; uint16_t ms; };
 
+// ── Fault alarm: descending tones ≈ 1550ms ─────────────────
 static const Note k_alarm[] = {
     {880, 200}, {0,  50},
     {660, 200}, {0,  50},
     {440, 300}, {0,  50},
     {880, 150}, {0,  50},
     {660, 500},
-};  // total ≈ 1550 ms
+};
 static const int k_alarmLen = sizeof(k_alarm) / sizeof(k_alarm[0]);
 
-static int      g_noteIdx = -1;   // -1 = idle
-static uint32_t g_noteEnd = 0;
+// ── Comm fail: ascending tones ≈ 1200ms ────────────────────
+static const Note k_comm[] = {
+    {330, 150}, {0,  40},
+    {440, 150}, {0,  40},
+    {550, 150}, {0,  40},
+    {660, 150}, {0,  40},
+    {880, 400},
+};
+static const int k_commLen = sizeof(k_comm) / sizeof(k_comm[0]);
+
+// ── Playback state ──────────────────────────────────────────
+static const Note* g_melody    = nullptr;
+static int         g_melodyLen = 0;
+static int         g_noteIdx   = -1;   // -1 = idle
+static uint32_t    g_noteEnd   = 0;
 
 // ── Helpers ────────────────────────────────────────────────
 static void playFreq(uint16_t freq) {
@@ -32,8 +45,14 @@ static void playFreq(uint16_t freq) {
     }
 }
 
-static void silence() {
-    ledcWrite(BUZ_CHANNEL, 0);
+static void silence() { ledcWrite(BUZ_CHANNEL, 0); }
+
+static void startMelody(const Note* melody, int len) {
+    g_melody    = melody;
+    g_melodyLen = len;
+    g_noteIdx   = 0;
+    playFreq(melody[0].freq);
+    g_noteEnd = millis() + melody[0].ms;
 }
 
 // ── Public ─────────────────────────────────────────────────
@@ -49,25 +68,24 @@ void buzzerLoop() {
     if (now < g_noteEnd) return;
 
     g_noteIdx++;
-    if (g_noteIdx >= k_alarmLen) {
+    if (g_noteIdx >= g_melodyLen) {
         g_noteIdx = -1;
         silence();
         return;
     }
 
-    const Note& n = k_alarm[g_noteIdx];
+    const Note& n = g_melody[g_noteIdx];
     playFreq(n.freq);
     g_noteEnd = now + n.ms;
 }
 
 void buzzerClick() {
     playFreq(1200);
-    g_noteEnd  = millis() + 40;
-    g_noteIdx  = k_alarmLen;  // will call silence() after 40ms via buzzerLoop
+    g_melody    = nullptr;
+    g_melodyLen = 0;
+    g_noteEnd   = millis() + 40;
+    g_noteIdx   = 1;  // will trigger idle after 40ms
 }
 
-void buzzerAlarm() {
-    g_noteIdx = 0;
-    playFreq(k_alarm[0].freq);
-    g_noteEnd = millis() + k_alarm[0].ms;
-}
+void buzzerAlarm()    { startMelody(k_alarm, k_alarmLen); }
+void buzzerCommFail() { startMelody(k_comm,  k_commLen);  }

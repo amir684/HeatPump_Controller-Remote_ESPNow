@@ -24,7 +24,7 @@
 #define LCD_RST_PIN 16
 #define LCD_SCK_PIN 18
 #define LCD_SDI_PIN 23
-#define LCD_BL_PIN  32    // Backlight (PWM)
+#define LCD_BL_PIN  15    // Backlight (PWM)
 
 // Backlight PWM settings
 #define LCD_BL_CHANNEL   0        // LEDC channel — timer 0
@@ -48,14 +48,14 @@
 #define PIN_RELAY_PUMP   33   // Water circulation pump (3A)
 
 // ── Buttons (INPUT_PULLUP, active LOW) ─────────────────────
-#define PIN_BTN_POWER   25   // System on/off (long press)
-#define PIN_BTN_UP      19   // Navigate up / increment
-#define PIN_BTN_DOWN    22   // Navigate down / decrement
-#define PIN_BTN_ENTER   21   // Confirm / enter submenu
-#define PIN_BTN_BACK    13   // Back / cancel
+#define PIN_BTN_POWER   27   // System on/off (long press)
+#define PIN_BTN_UP      32   // Navigate up / increment
+#define PIN_BTN_DOWN    33   // Navigate down / decrement
+#define PIN_BTN_ENTER   25   // Confirm / enter submenu
+#define PIN_BTN_BACK    26   // Back / cancel
 
 // ── Buzzer ──────────────────────────────────────────────────
-#define PIN_BUZZER       4   // Passive speaker via NPN transistor
+#define PIN_BUZZER      14   // Passive speaker via NPN transistor
 
 // ── NTC Parameters ─────────────────────────────────────────
 #define NTC_SERIES_R    10000.0f  // Series resistor value (Ohms)

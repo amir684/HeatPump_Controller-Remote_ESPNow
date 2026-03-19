@@ -8,5 +8,6 @@
 void buzzerInit();
 void buzzerLoop();    // call every loop iteration (non-blocking melody playback)
 
-void buzzerClick();   // short beep — call on any button press
-void buzzerAlarm();   // 1.5s fault melody — call on new error/protection event
+void buzzerClick();      // short beep — call on any button press
+void buzzerAlarm();      // 1.5s descending melody — fault / error / protection
+void buzzerCommFail();   // 1.2s ascending melody — ESP-NOW send failure
