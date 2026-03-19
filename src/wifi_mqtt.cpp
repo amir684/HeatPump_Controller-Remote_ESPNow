@@ -46,7 +46,8 @@ static void onMqttMessage(char* topic, byte* payload, unsigned int len) {
     // {"setpoint": 45.0}
     if (doc.containsKey("setpoint")) {
         float sp = doc["setpoint"].as<float>();
-        if (sp >= 10.0f && sp <= 70.0f) {
+        if (sp > s.u03) sp = s.u03;
+        if (sp >= 10.0f && sp <= s.u03) {
             s.setpoint = sp;
             settingsSave();
         }
@@ -86,7 +87,7 @@ static void publishDiscoveryClimate() {
     doc["action_topic"]    = T_STATE;
     doc["action_template"] = "{{ value_json.action }}";
     doc["min_temp"]        = 10;
-    doc["max_temp"]        = 70;
+    doc["max_temp"]        = (int)settingsGet().u03;
     doc["temp_step"]       = 1;
     doc["availability_topic"] = T_AVAILABLE;
 

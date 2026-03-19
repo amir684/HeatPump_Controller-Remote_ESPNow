@@ -63,6 +63,7 @@ static const char* MAIN_ITEMS[] = {
 static const int MAIN_COUNT = 10;
 
 static const char* PARAM_NAMES[] = {
+    "U03 Max Setpoint",
     "U01 Hysteresis",
     "U02 Water Cal.",
     "U30 Dfr.Start Tm",
@@ -75,7 +76,7 @@ static const char* PARAM_NAMES[] = {
     "U52 Antifreeze",
     "U80 Auto Restart",
 };
-static const int PARAM_COUNT = 11;
+static const int PARAM_COUNT = 12;
 
 // ── Helpers ────────────────────────────────────────────────
 static void goTo(Screen s) {
@@ -112,34 +113,38 @@ static void loadParam(int id) {
     g_edit.name    = PARAM_NAMES[id];
     g_edit.paramId = id;
     switch (id) {
-    case 0:  g_edit.fVal=s.u01; g_edit.fMin=2;    g_edit.fMax=10;  g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
-    case 1:  g_edit.fVal=s.u02; g_edit.fMin=-9.9f;g_edit.fMax=9.9f;g_edit.fStep=0.1f; goTo(Screen::EDIT_FLOAT); break;
-    case 2:  g_edit.iVal=s.u30; g_edit.iMin=10;   g_edit.iMax=90;                      goTo(Screen::EDIT_INT);   break;
-    case 3:  g_edit.fVal=s.u31; g_edit.fMin=-20;  g_edit.fMax=0;   g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
-    case 4:  g_edit.fVal=s.u32; g_edit.fMin=2;    g_edit.fMax=30;  g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
-    case 5:  g_edit.iVal=s.u33; g_edit.iMin=2;    g_edit.iMax=15;                      goTo(Screen::EDIT_INT);   break;
-    case 6:  g_edit.iVal=s.u34; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
-    case 7:  g_edit.iVal=s.u50; g_edit.iMin=0;    g_edit.iMax=2;                       goTo(Screen::EDIT_INT);   break;
-    case 8:  g_edit.fVal=s.u51; g_edit.fMin=50;   g_edit.fMax=125; g_edit.fStep=1.0f; goTo(Screen::EDIT_FLOAT); break;
-    case 9:  g_edit.iVal=s.u52; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
-    case 10: g_edit.iVal=s.u80; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
+    case 0:  g_edit.fVal=s.u03; g_edit.fMin=30;   g_edit.fMax=70;  g_edit.fStep=1.0f; goTo(Screen::EDIT_FLOAT); break;
+    case 1:  g_edit.fVal=s.u01; g_edit.fMin=2;    g_edit.fMax=10;  g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
+    case 2:  g_edit.fVal=s.u02; g_edit.fMin=-9.9f;g_edit.fMax=9.9f;g_edit.fStep=0.1f; goTo(Screen::EDIT_FLOAT); break;
+    case 3:  g_edit.iVal=s.u30; g_edit.iMin=10;   g_edit.iMax=90;                      goTo(Screen::EDIT_INT);   break;
+    case 4:  g_edit.fVal=s.u31; g_edit.fMin=-20;  g_edit.fMax=0;   g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
+    case 5:  g_edit.fVal=s.u32; g_edit.fMin=2;    g_edit.fMax=30;  g_edit.fStep=0.5f; goTo(Screen::EDIT_FLOAT); break;
+    case 6:  g_edit.iVal=s.u33; g_edit.iMin=2;    g_edit.iMax=15;                      goTo(Screen::EDIT_INT);   break;
+    case 7:  g_edit.iVal=s.u34; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
+    case 8:  g_edit.iVal=s.u50; g_edit.iMin=0;    g_edit.iMax=2;                       goTo(Screen::EDIT_INT);   break;
+    case 9:  g_edit.fVal=s.u51; g_edit.fMin=50;   g_edit.fMax=125; g_edit.fStep=1.0f; goTo(Screen::EDIT_FLOAT); break;
+    case 10: g_edit.iVal=s.u52; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
+    case 11: g_edit.iVal=s.u80; g_edit.iMin=0;    g_edit.iMax=1;                       goTo(Screen::EDIT_INT);   break;
     }
 }
 
 static void saveParam() {
     Settings& s = settingsGet();
     switch (g_edit.paramId) {
-    case 0:  s.u01=(uint8_t)g_edit.fVal; break;  // actually float
-    case 1:  s.u02=g_edit.fVal; break;
-    case 2:  s.u30=(uint8_t)g_edit.iVal; break;
-    case 3:  s.u31=g_edit.fVal; break;
-    case 4:  s.u32=g_edit.fVal; break;
-    case 5:  s.u33=(uint8_t)g_edit.iVal; break;
-    case 6:  s.u34=(uint8_t)g_edit.iVal; break;
-    case 7:  s.u50=(uint8_t)g_edit.iVal; break;
-    case 8:  s.u51=g_edit.fVal; break;
-    case 9:  s.u52=(uint8_t)g_edit.iVal; break;
-    case 10: s.u80=(uint8_t)g_edit.iVal; break;
+    case 0:  s.u03=g_edit.fVal;
+             if (s.setpoint > s.u03) s.setpoint = s.u03;
+             break;
+    case 1:  s.u01=g_edit.fVal; break;
+    case 2:  s.u02=g_edit.fVal; break;
+    case 3:  s.u30=(uint8_t)g_edit.iVal; break;
+    case 4:  s.u31=g_edit.fVal; break;
+    case 5:  s.u32=g_edit.fVal; break;
+    case 6:  s.u33=(uint8_t)g_edit.iVal; break;
+    case 7:  s.u34=(uint8_t)g_edit.iVal; break;
+    case 8:  s.u50=(uint8_t)g_edit.iVal; break;
+    case 9:  s.u51=g_edit.fVal; break;
+    case 10: s.u52=(uint8_t)g_edit.iVal; break;
+    case 11: s.u80=(uint8_t)g_edit.iVal; break;
     case 100: s.setpoint=g_edit.fVal; break;
     case 201: s.mqttPort=(uint16_t)g_edit.iVal; break;
     }
@@ -164,7 +169,7 @@ static void handleMainMenu() {
             delay(800); exitMenu(); return;
         case 1:
             g_edit.name="Setpoint"; g_edit.fVal=s.setpoint;
-            g_edit.fMin=10; g_edit.fMax=70; g_edit.fStep=1.0f; g_edit.paramId=100;
+            g_edit.fMin=10; g_edit.fMax=s.u03; g_edit.fStep=1.0f; g_edit.paramId=100;
             goTo(Screen::EDIT_FLOAT); return;
         case 2:
             s.workMode = (s.workMode==0) ? 1 : 0; settingsSave();
@@ -385,7 +390,7 @@ void menuLoop() {
     // ── Main screen ────────────────────────────────────────
     if (g_screen == Screen::MAIN) {
         if (Buttons.pressed(BTN_ENTER))                      { goTo(Screen::MAIN_MENU); displayShowMenu("MAIN MENU", MAIN_ITEMS, MAIN_COUNT, g_cursor, g_scroll); return; }
-        if (Buttons.pressed(BTN_UP)   || Buttons.repeat(BTN_UP))   { if(s.setpoint<70) { s.setpoint+=1.0f; settingsSave(); } }
+        if (Buttons.pressed(BTN_UP)   || Buttons.repeat(BTN_UP))   { if(s.setpoint<s.u03) { s.setpoint+=1.0f; settingsSave(); } }
         if (Buttons.pressed(BTN_DOWN) || Buttons.repeat(BTN_DOWN))  { if(s.setpoint>10) { s.setpoint-=1.0f; settingsSave(); } }
         return;
     }

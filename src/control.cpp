@@ -139,8 +139,8 @@ void controlSetOnline(bool online) {
         }
     } else {
         // Graceful shutdown
-        relaySet(Relay::COMP, false);
         if (relayGet(Relay::COMP)) g_compStopMs = millis();
+        relaySet(Relay::COMP, false);
         relaySet(Relay::FAN,  false);
         valveSetHeating();
         enterState(HpState::OFFLINE);

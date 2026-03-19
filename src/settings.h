@@ -15,7 +15,8 @@ struct Period {
 
 struct Settings {
     // ── Temperature control ──────────────────────────────
-    float  setpoint;      // SP: target water temp (10-70°C)
+    float  setpoint;      // SP: target water temp (10-u03°C)
+    float  u03;           // Max setpoint limit (30-70°C)
     float  u01;           // Hysteresis (2-10°C)
     float  u02;           // Water sensor calibration (-9.9..9.9°C)
 

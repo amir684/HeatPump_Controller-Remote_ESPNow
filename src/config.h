@@ -99,6 +99,7 @@
 
 // ── Parameter Defaults ─────────────────────────────────────
 #define DEF_SETPOINT   40.0f
+#define DEF_U03        55.0f   // max setpoint limit
 #define DEF_U01         5.0f   // hysteresis
 #define DEF_U02         0.0f   // water sensor calibration
 #define DEF_U30            45  // defrost start time (min)

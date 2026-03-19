@@ -8,6 +8,7 @@ static bool        g_dirty = false;
 
 static void applyDefaults() {
     g_settings.setpoint    = DEF_SETPOINT;
+    g_settings.u03         = DEF_U03;
     g_settings.u01         = DEF_U01;
     g_settings.u02         = DEF_U02;
     g_settings.u30         = DEF_U30;
@@ -44,6 +45,7 @@ void settingsLoad() {
     if (!prefs.isKey("init")) return;  // nothing saved yet
 
     g_settings.setpoint    = prefs.getFloat("sp",   DEF_SETPOINT);
+    g_settings.u03         = prefs.getFloat("u03",  DEF_U03);
     g_settings.u01         = prefs.getFloat("u01",  DEF_U01);
     g_settings.u02         = prefs.getFloat("u02",  DEF_U02);
     g_settings.u30         = prefs.getUChar("u30",  DEF_U30);
@@ -72,6 +74,7 @@ void settingsSave() {
     prefs.putBool("init", true);
 
     prefs.putFloat("sp",    g_settings.setpoint);
+    prefs.putFloat("u03",   g_settings.u03);
     prefs.putFloat("u01",   g_settings.u01);
     prefs.putFloat("u02",   g_settings.u02);
     prefs.putUChar("u30",   g_settings.u30);

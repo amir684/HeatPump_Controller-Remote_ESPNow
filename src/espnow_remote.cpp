@@ -22,6 +22,7 @@ static bool            g_defrostPending  = false;
 static uint32_t        g_lastDefrostSend = 0;
 static uint32_t        g_defrostSentAt   = 0;
 static volatile bool   g_sendFailed      = false;
+static volatile bool   g_lastWasCommand  = false;  // true = last send was a command (not settings)
 
 // ── Callbacks ───────────────────────────────────────────────
 static void onSent(const uint8_t* mac, esp_now_send_status_t status) {
@@ -70,7 +71,7 @@ void espnowRemoteLoop() {
 
     if (g_sendFailed) {
         g_sendFailed = false;
-        if (!g_defrostPending) {
+        if (g_lastWasCommand) {
             displayToast("Send failed", "Will retry...", 3000);
             buzzerCommFail();
         }
@@ -102,11 +103,13 @@ void espnowSetDefrostPending(bool pending) {
 
 // ── Send helpers ────────────────────────────────────────────
 void espnowSendCommand(CommandPacket& pkt) {
+    g_lastWasCommand = true;
     const uint8_t ctrlMac[] = CTRL_MAC_BYTES;
     esp_now_send(ctrlMac, reinterpret_cast<const uint8_t*>(&pkt), sizeof(pkt));
 }
 
 void espnowSendSettings() {
+    g_lastWasCommand = false;
     const Settings& s = settingsGet();
     SettingsPacket pkt{};
     pkt.type         = PktType::SETTINGS;
