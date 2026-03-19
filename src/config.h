@@ -30,8 +30,8 @@
 #define LCD_BL_CHANNEL   0        // LEDC channel — timer 0
 #define LCD_BL_FREQ      5000     // PWM frequency Hz
 #define LCD_BL_RES       8        // 8-bit resolution (0-255)
-#define LCD_BL_DEFAULT    55      // brightness on startup (active-LOW: low=bright)
-#define LCD_BL_DIM       210      // brightness when dimmed (active-LOW: high=dim)
+#define LCD_BL_DEFAULT    10      // brightness on startup (active-LOW: low=bright)
+#define LCD_BL_DIM       150      // brightness when dimmed (active-LOW: high=dim)
 #define LCD_CONTRAST      130      // display contrast (0-255, ST7567 typical: 120-140)
 
 // ── NTC Sensors 10K/3470 (ADC1 - safe with WiFi) ───────────
@@ -56,6 +56,9 @@
 
 // ── Buzzer ──────────────────────────────────────────────────
 #define PIN_BUZZER      14   // Passive speaker via NPN transistor
+
+// ── Comm LED ─────────────────────────────────────────────────
+#define PIN_COMM_LED    17   // LED: ON when ESP-NOW signal lost
 
 // ── NTC Parameters ─────────────────────────────────────────
 #define NTC_SERIES_R    10000.0f  // Series resistor value (Ohms)

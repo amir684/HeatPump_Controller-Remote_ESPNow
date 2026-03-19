@@ -36,6 +36,8 @@ void setup() {
     // sensorsInit/relaysInit/controlInit are no-ops in proxy implementations
 
     buzzerInit();
+    pinMode(PIN_COMM_LED, OUTPUT);
+    digitalWrite(PIN_COMM_LED, LOW);
     displayInit();
     Buttons.begin();
     xTaskCreatePinnedToCore(buttonTask, "buttons", 2048, NULL, 5, NULL, 1);
@@ -64,6 +66,7 @@ void loop() {
         espnowSendSettings();
     }
 
+    digitalWrite(PIN_COMM_LED, espnowCtrlSignalLost() ? HIGH : LOW);
     buzzerLoop();
     menuLoop();
     espnowRemoteLoop();
