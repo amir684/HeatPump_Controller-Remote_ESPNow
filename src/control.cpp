@@ -85,14 +85,12 @@ static void checkExhaustProtection() {
     const SensorData& d = sensorsGet();
     if (s.u50 == 0 || !d.exhaustOk) return;
 
-    if (s.u50 == 2 && d.exhaust >= s.u51) {
-        relaySet(Relay::FAN, false);  // stop fan when exhaust >= u51
-    }
-    if (d.exhaust >= s.u51 + 10.0f) {
-        // Emergency stop
+    if (d.exhaust >= s.u51) {
+        // Stop compressor with 3-min protection
+        if (relayGet(Relay::COMP)) g_compStopMs = millis();
         relaySet(Relay::COMP, false);
-        g_compStopMs = millis();
-        relaySet(Relay::FAN,  false);
+        // U50=2: stop fan too; U50=1: fan keeps running to cool down
+        if (s.u50 == 2) relaySet(Relay::FAN, false);
         valveSetHeating();
         g_error = HpError::EH_EXHAUST_ALARM;
         enterState(HpState::EXHAUST_PROTECT);
@@ -357,7 +355,8 @@ void controlLoop() {
 
     // ── EXHAUST PROTECTION ────────────────────────────────
     case HpState::EXHAUST_PROTECT:
-        if (d.exhaustOk && d.exhaust <= (s.u51 - 10.0f)) {
+        // Wait for 3-min compressor min-off, then resume heating normally
+        if (compProtectionExpired()) {
             g_error = HpError::NONE;
             enterState(HpState::STANDBY);
         }

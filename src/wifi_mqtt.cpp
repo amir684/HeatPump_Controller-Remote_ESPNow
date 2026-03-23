@@ -151,12 +151,19 @@ static void publishDiscoveryBinarySensor(const char* id, const char* name,
 void mqttPublishDiscovery() {
     if (!g_mqtt.connected()) return;
     publishDiscoveryClimate();
-    publishDiscoverySensor("water_temp",   "HP Water Temp",   "water_temp",   "°C", "temperature");
-    publishDiscoverySensor("pipe_temp",    "HP Pipe Temp",    "pipe_temp",    "°C", "temperature");
-    publishDiscoverySensor("exhaust_temp", "HP Exhaust Temp", "exhaust_temp", "°C", "temperature");
-    publishDiscoverySensor("outdoor_temp", "HP Outdoor Temp", "outdoor_temp", "°C", "temperature");
-    publishDiscoveryBinarySensor("compressor", "HP Compressor", "compressor", "running");
-    publishDiscoveryBinarySensor("defrost",    "HP Defrost",    "defrost");
+    publishDiscoverySensor("water_temp",      "HP Water Temp",      "water_temp",      "°C", "temperature");
+    publishDiscoverySensor("pipe_temp",       "HP Pipe Temp",       "pipe_temp",       "°C", "temperature");
+    publishDiscoverySensor("exhaust_temp",    "HP Exhaust Temp",    "exhaust_temp",    "°C", "temperature");
+    publishDiscoverySensor("outdoor_temp",    "HP Outdoor Temp",    "outdoor_temp",    "°C", "temperature");
+    publishDiscoverySensor("comp_run_min",    "HP Comp Run Minutes","comp_run_min",    "min");
+    publishDiscoverySensor("defrost_count",   "HP Defrost Count",   "defrost_count",   "");
+    publishDiscoverySensor("state",           "HP State",           "state",           "");
+    publishDiscoverySensor("error",           "HP Error",           "error",           "");
+    publishDiscoverySensor("work_mode",       "HP Work Mode",       "work_mode",       "");
+    publishDiscoveryBinarySensor("compressor","HP Compressor",      "compressor",      "running");
+    publishDiscoveryBinarySensor("fan",       "HP Fan",             "fan");
+    publishDiscoveryBinarySensor("valve",     "HP Valve",           "valve");
+    publishDiscoveryBinarySensor("defrost",   "HP Defrost",         "defrost");
 }
 
 // ── State publish ──────────────────────────────────────────
@@ -167,7 +174,7 @@ void mqttPublishState() {
     const SensorData& d  = sensorsGet();
     Settings& s          = settingsGet();
 
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<768> doc;
     doc["mode"]    = (hp.state == HpState::OFFLINE) ? "off" : "heat";
     doc["setpoint"]= s.setpoint;
 
@@ -185,13 +192,30 @@ void mqttPublishState() {
         doc["action"] = "idle";
     }
 
-    doc["compressor"] = hp.compressor;
-    doc["fan"]        = hp.fan;
-    doc["valve"]      = hp.valve;
-    doc["defrost"]    = hp.defrosting;
-    doc["work_mode"]  = (s.workMode == 0) ? "auto" : "save";
+    doc["compressor"]    = hp.compressor;
+    doc["fan"]           = hp.fan;
+    doc["valve"]         = hp.valve;
+    doc["defrost"]       = hp.defrosting;
+    doc["work_mode"]     = (s.workMode == 0) ? "auto" : "save";
+    doc["comp_run_min"]  = hp.compRunMinutes;
+    doc["defrost_count"] = hp.defrostCount;
 
-    char buf[512];
+    // State as string
+    static const char* stateNames[] = {
+        "offline","antifreeze_on","antifreeze_wait","startup_fan",
+        "comp_delay","heating","shutdown_comp","shutdown_fan",
+        "standby","defrost_stop","defrost_valve","defrosting",
+        "defrost_end_stop","defrost_end_valve","exhaust_protect"
+    };
+    doc["state"] = stateNames[(int)hp.state];
+
+    // Error as string
+    static const char* errorNames[] = {
+        "none","E01_water","E02_pipe","E03_exhaust","E04_outdoor","EH_exhaust_alarm"
+    };
+    doc["error"] = errorNames[(int)hp.error];
+
+    char buf[768];
     serializeJson(doc, buf, sizeof(buf));
     g_mqtt.publish(T_STATE, buf, false);
 }
