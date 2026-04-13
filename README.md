@@ -2,7 +2,7 @@
 
 ESP32-based smart heat pump controller split across **two boards** communicating wirelessly via **ESP-NOW** (~500µs latency, no router needed).
 
-Replaces the **ZL-R200A** heat pump board with full Home Assistant integration, LCD menu, and identical control logic to the original.
+Full replacement for a heat pump control board with Home Assistant integration, LCD menu, and complete control logic.
 
 ---
 
@@ -135,8 +135,8 @@ Installing the Controller into the outdoor unit and connecting all sensors and l
 <table>
 <tr>
 <td align="center" width="50%">
-<img src="images/20260320_112327.jpg" alt="NTC sensor mounting on water tank"><br>
-<sub>Brass immersion fitting drilled into the hot-water tank for the NTC water-temperature sensor — direct contact with the water for accurate temperature reading.</sub>
+<img src="images/20260320_112327.jpg" alt="SMA connector for external antenna"><br>
+<sub>SMA connector mounted on the heat pump enclosure for the external antenna — required for reliable ESP-NOW range since the Controller board sits inside a metal housing.</sub>
 </td>
 <td align="center" width="50%">
 <img src="images/20260320_120202.jpg" alt="Controller installed in outdoor unit"><br>
@@ -196,7 +196,7 @@ The Remote unit installed indoors, fully operational.
 ## Features
 
 ### Controller
-- Identical control logic to the **ZL-R200A** (startup/shutdown sequences, auto defrost, anti-freeze, exhaust protection)
+- Full heat pump control logic (startup/shutdown sequences, auto defrost, anti-freeze, exhaust protection)
 - Reads 4× NTC 10K/3470 temperature sensors
 - Drives 4× relays (compressor, fan, 4-way valve, water pump)
 - Sends full status to Remote every **500 ms** via ESP-NOW
@@ -403,7 +403,7 @@ Auto-discovers via MQTT. All entities appear automatically after connecting to t
 
 ## Control Logic
 
-Replicates ZL-R200A exactly — runs on the **Controller** board.
+Runs on the **Controller** board.
 
 ### Startup Sequence
 ```
@@ -448,4 +448,4 @@ COMPRESSOR OFF → 30s → FAN OFF + VALVE → 30s → PUMP OFF
 
 ## License
 
-Private — all rights reserved.
+[Apache License 2.0](LICENSE)
