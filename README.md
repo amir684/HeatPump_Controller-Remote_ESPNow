@@ -6,6 +6,22 @@ Replaces the **ZL-R200A** heat pump board with full Home Assistant integration, 
 
 ---
 
+> [!CAUTION]
+> ## ⚡ ELECTRICAL SAFETY — 230V AC MAINS VOLTAGE
+>
+> This project involves direct connection to **230V AC mains electricity**.
+> Improper handling can cause **electric shock, fire, or death**.
+>
+> - **Only qualified and licensed electricians** should install or service this system.
+> - **Disconnect and lock out mains power** before opening the heat pump enclosure or touching any wiring.
+> - The relay outputs switch **live 230V loads** — compressor (30A), fan, valve, and pump.
+> - Do not operate with the enclosure open or with exposed conductors.
+> - Verify local electrical codes and regulations before installation.
+>
+> **If you are not trained and certified to work with high-voltage systems — do not attempt this project.**
+
+---
+
 ## Architecture Overview
 
 ```
@@ -35,7 +51,145 @@ Replaces the **ZL-R200A** heat pump board with full Home Assistant integration, 
 
 ## Photos
 
-> _Photos coming soon — place images in the `images_remote/` folder_
+### Phase 1 — Firmware & UI Development
+
+Early bench testing of the LCD menu system before any hardware was assembled.
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260315_225025.jpg" alt="LCD Main Menu"><br>
+<sub>Main Menu on the ST7567 LCD — System ON/OFF, Temperature, Work Mode, Parameters and SAVE Periods all working in the first firmware build.</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260315_225051.jpg" alt="LCD Parameters Screen"><br>
+<sub>Parameters screen showing the defrost and calibration settings (U01–U32) — the full configuration menu navigable directly from the display.</sub>
+</td>
+</tr>
+</table>
+
+---
+
+### Phase 2 — First Prototype
+
+First time both boards were connected together and communicating over ESP-NOW.
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260316_233026.jpg" alt="First prototype assembled"><br>
+<sub>First working prototype — the Controller perfboard (relays + ESP32) wired to the Remote's LCD and a 5-button pad. Both boards talking over ESP-NOW for the first time.</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260316_233038.jpg" alt="LCD live status screen"><br>
+<sub>LCD showing live status received from the Controller: water temp 35.6°C, setpoint 51°C, relay states (COMP / FAN / VLV) and operating mode — all transmitted wirelessly at 500 ms intervals.</sub>
+</td>
+</tr>
+</table>
+
+---
+
+### Phase 3 — PCB Build & Assembly
+
+Building the final perfboard PCBs for both units.
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260320_095608.jpg" alt="Remote PCB front"><br>
+<sub>Remote PCB — front view. The ST7567 LCD module sits centrally with the 5 navigation buttons mounted below it on the perfboard.</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260320_095624.jpg" alt="Remote PCB back"><br>
+<sub>Remote PCB — back view. The ESP32-WROOM module and a USB-C power board are soldered in, with hand-wired connections to the LCD and buttons.</sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260320_100646.jpg" alt="Both boards side by side"><br>
+<sub>Both finished boards side by side before installation — Controller (left, with 4 relays and WiFi antenna) and Remote (right, with LCD, buttons and antenna).</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260320_100654.jpg" alt="Controller PCB close-up"><br>
+<sub>Controller PCB close-up — three SONGLE 250V/10A relays, the ESP32 module, and the NTC sensor terminal blocks labeled water / pipe / exhaust / outdoor.</sub>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260320_111705.jpg" alt="Controller with relay wiring"><br>
+<sub>Controller board with the 230V relay output wiring attached — yellow/green and red cables terminated with spade connectors, ready to connect to the heat pump loads.</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260320_111709.jpg" alt="Controller on enclosure base"><br>
+<sub>Controller board mounted on standoffs above an aluminium enclosure base — provides physical protection and electrical isolation from the heat pump chassis.</sub>
+</td>
+</tr>
+</table>
+
+---
+
+### Phase 4 — Installation in the Heat Pump
+
+Installing the Controller into the outdoor unit and connecting all sensors and loads.
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="images/20260320_112327.jpg" alt="NTC sensor mounting on water tank"><br>
+<sub>Brass immersion fitting drilled into the hot-water tank for the NTC water-temperature sensor — direct contact with the water for accurate temperature reading.</sub>
+</td>
+<td align="center" width="50%">
+<img src="images/20260320_120202.jpg" alt="Controller installed in outdoor unit"><br>
+<sub>Controller board installed inside the heat pump outdoor enclosure with all relay and sensor wiring connected. The ESP32 communicates wirelessly to the indoor Remote — no data cable needed.</sub>
+</td>
+</tr>
+</table>
+
+---
+
+### Phase 5 — Home Assistant Integration
+
+The Remote connects to Home Assistant via MQTT with full auto-discovery — no manual entity configuration needed.
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="images/Screenshot_20260316_234447_Home Assistant.jpg" alt="HA climate card idle" width="220"><br>
+<sub>Home Assistant climate card — heat pump in Idle mode, setpoint 47°C, current water temp 29.8°C.</sub>
+</td>
+<td align="center" width="33%">
+<img src="images/Screenshot_20260316_234508_Home Assistant.jpg" alt="HA device sensors" width="220"><br>
+<sub>HA device page — all auto-discovered entities: climate control, compressor state, defrost status, and all four temperature sensors.</sub>
+</td>
+<td align="center" width="33%">
+<img src="images/Screenshot_20260316_234757_Home Assistant.jpg" alt="HA climate card heating" width="220"><br>
+<sub>Heat pump actively Heating — setpoint 48°C, current water temp 32.3°C. Controlled directly from the HA app.</sub>
+</td>
+</tr>
+</table>
+
+---
+
+### Phase 6 — Final Installed Product
+
+The Remote unit installed indoors, fully operational.
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="images/20260413_205955.jpg" alt="Remote installed - status screen"><br>
+<sub>Remote on the wall — main status screen: STANDBY, water 49.2°C, setpoint 50°C, outdoor 21.1°C, pipe 23.7°C, exhaust 26.0°C. 4-way valve active indicator visible.</sub>
+</td>
+<td align="center" width="33%">
+<img src="images/20260413_210006.jpg" alt="Remote installed - main menu"><br>
+<sub>Main Menu — System ON/OFF, Temperature, Work Mode, Parameters, and SAVE Periods — all accessible directly from the wall-mounted Remote.</sub>
+</td>
+<td align="center" width="33%">
+<img src="images/20260413_210026.jpg" alt="Remote installed - extended menu"><br>
+<sub>Extended menu — Force Defrost, View Sensors, WiFi Setup, and MQTT Setup. Full configuration without a computer or phone.</sub>
+</td>
+</tr>
+</table>
 
 ---
 
