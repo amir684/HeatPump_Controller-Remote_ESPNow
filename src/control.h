@@ -53,5 +53,13 @@ const HpStatus& controlStatus();
 void controlSetOnline(bool online);  // turn system on/off
 void controlForceDefrost();          // manual forced defrost
 
+// Controller only: all relays off immediately (firmware update). The state
+// machine restarts from STANDBY/OFFLINE when controlLoop() runs again.
+void controlSuspend();
+
+// Remote only: names used by MQTT and the web page
+const char* hpStateName(HpState s);
+const char* hpErrorName(HpError e);
+
 // Check if currently in SAVE mode active period
 bool controlInSavePeriod();

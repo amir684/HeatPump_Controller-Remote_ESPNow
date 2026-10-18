@@ -20,6 +20,12 @@ enum class PktType : uint8_t {
     STATUS   = 1,   // Controller → Remote
     COMMAND  = 2,   // Remote → Controller
     SETTINGS = 3,   // Remote → Controller (full settings sync)
+    OTA_BEGIN = 4,  // Remote → Controller: start firmware update
+    OTA_DATA  = 5,  // Remote → Controller: one image chunk
+    OTA_END   = 6,  // Remote → Controller: verify + reboot
+    OTA_ABORT = 7,  // Remote → Controller: cancel update
+    OTA_ACK   = 8,  // Controller → Remote: reply to any OTA_* packet
+    INFO      = 9,  // Controller → Remote (~5 s): firmware version
 };
 
 // ── Command types (inside CommandPacket) ───────────────────
@@ -84,4 +90,50 @@ struct SettingsPacket {
     uint8_t  periodOffHour[3];
     uint8_t  periodOffMin[3];
     bool     periodEnabled[3];
+};
+
+// ── Firmware update over ESP-NOW (stop-and-wait) ──────────
+// Packed: these carry raw image bytes and must fit the 250-byte ESP-NOW limit.
+#define OTA_CHUNK_SIZE  240
+
+enum class OtaResult : uint8_t {
+    OK         = 0,
+    ERR_STATE  = 1,   // no update in progress / not all data received
+    ERR_SIZE   = 2,   // image does not fit the OTA partition
+    ERR_BEGIN  = 3,   // esp_ota_begin failed
+    ERR_OFFSET = 4,   // chunk out of sequence — resend from nextOffset
+    ERR_WRITE  = 5,   // flash write failed
+    ERR_MD5    = 6,   // received image does not match the MD5
+    ERR_IMAGE  = 7,   // image failed validation / cannot be made bootable
+};
+
+struct __attribute__((packed)) OtaBeginPacket {
+    PktType  type;
+    uint32_t size;
+    uint8_t  md5[16];
+};
+
+struct __attribute__((packed)) OtaDataPacket {
+    PktType  type;
+    uint32_t offset;
+    uint16_t len;
+    uint8_t  data[OTA_CHUNK_SIZE];
+};
+
+struct __attribute__((packed)) OtaCtlPacket {   // OTA_END, OTA_ABORT
+    PktType  type;
+};
+
+struct __attribute__((packed)) OtaAckPacket {
+    PktType   type;        // OTA_ACK
+    PktType   ackOf;       // which request this answers
+    OtaResult result;
+    uint32_t  nextOffset;  // bytes stored so far
+};
+
+struct __attribute__((packed)) InfoPacket {
+    PktType  type;         // INFO
+    char     version[16];
+    char     built[24];
+    bool     otaActive;
 };

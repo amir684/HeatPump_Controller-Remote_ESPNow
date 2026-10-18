@@ -8,6 +8,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <esp_wifi.h>
+#include "web.h"
 
 // ── MQTT Topics ────────────────────────────────────────────
 #define T_AVAILABLE  MQTT_BASE_TOPIC "/available"
@@ -200,20 +201,8 @@ void mqttPublishState() {
     doc["comp_run_min"]  = hp.compRunMinutes;
     doc["defrost_count"] = hp.defrostCount;
 
-    // State as string
-    static const char* stateNames[] = {
-        "offline","antifreeze_on","antifreeze_wait","startup_fan",
-        "comp_delay","heating","shutdown_comp","shutdown_fan",
-        "standby","defrost_stop","defrost_valve","defrosting",
-        "defrost_end_stop","defrost_end_valve","exhaust_protect"
-    };
-    doc["state"] = stateNames[(int)hp.state];
-
-    // Error as string
-    static const char* errorNames[] = {
-        "none","E01_water","E02_pipe","E03_exhaust","E04_outdoor","EH_exhaust_alarm"
-    };
-    doc["error"] = errorNames[(int)hp.error];
+    doc["state"] = hpStateName(hp.state);
+    doc["error"] = hpErrorName(hp.error);
 
     char buf[768];
     serializeJson(doc, buf, sizeof(buf));
@@ -291,7 +280,9 @@ void wifiStartConfigPortal() {
     g_wifiManager.addParameter(&p_pass);
 
     g_wifiManager.setConfigPortalTimeout(300);  // 5 min
+    webStop();    // the portal runs its own server on port 80
     g_wifiManager.startConfigPortal(AP_NAME);
+    webBegin();
 
     // Save MQTT settings after portal closes
     strncpy(s.mqttHost, p_host.getValue(), sizeof(s.mqttHost) - 1);
@@ -331,6 +322,12 @@ void wifiDisable() {
 }
 
 bool wifiIsEnabled() { return g_wifiEnabled; }
+
+void mqttRestart() {
+    g_mqtt.disconnect();
+    g_discoveryDone = false;
+    g_lastReconnect = millis() - 10000UL;   // reconnect on the next loop
+}
 
 void wifiMqttLoop() {
     if (!g_wifiEnabled || WiFi.status() != WL_CONNECTED) return;

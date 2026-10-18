@@ -18,3 +18,5 @@ void wifiStartConfigPortal();      // open AP config portal
 void wifiEnable();                 // reconnect to saved AP
 void wifiDisable();                // disconnect from AP (keeps credentials + ESP-NOW)
 bool wifiIsEnabled();
+
+void mqttRestart();                // reconnect with the current broker settings

@@ -32,6 +32,8 @@ static void applyDefaults() {
     memset(g_settings.mqttUser, 0, sizeof(g_settings.mqttUser));
     memset(g_settings.mqttPass, 0, sizeof(g_settings.mqttPass));
     g_settings.wifiEnabled = true;
+    strncpy(g_settings.webPass, WEB_DEFAULT_PASS, sizeof(g_settings.webPass) - 1);
+    g_settings.webPass[sizeof(g_settings.webPass) - 1] = '\0';
 }
 
 void settingsInit() {
@@ -67,6 +69,12 @@ void settingsLoad() {
     prefs.getString("mqttUser", g_settings.mqttUser, sizeof(g_settings.mqttUser));
     prefs.getString("mqttPass", g_settings.mqttPass, sizeof(g_settings.mqttPass));
     g_settings.wifiEnabled = prefs.getBool("wifiEn", true);
+
+    // Older saves have no web password — keep the default then
+    char pass[sizeof(g_settings.webPass)] = {};
+    if (prefs.getString("webPass", pass, sizeof(pass)) > 0 && pass[0] != '\0') {
+        memcpy(g_settings.webPass, pass, sizeof(pass));
+    }
 }
 
 void settingsSave() {
@@ -96,6 +104,7 @@ void settingsSave() {
     prefs.putString("mqttUser", g_settings.mqttUser);
     prefs.putString("mqttPass", g_settings.mqttPass);
     prefs.putBool("wifiEn", g_settings.wifiEnabled);
+    prefs.putString("webPass", g_settings.webPass);
 }
 
 void settingsFactoryReset() {

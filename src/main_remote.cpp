@@ -16,6 +16,9 @@
 #include "control.h"    // proxy (control_remote.cpp)
 #include "sensors.h"    // proxy (sensors_remote.cpp)
 #include "buzzer.h"
+#include "web.h"
+#include "ota_remote.h"
+#include "fw_info.h"
 
 static uint32_t g_lastDisplay = 0;
 static uint32_t g_lastMqtt    = 0;
@@ -30,9 +33,10 @@ static void buttonTask(void*) {
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n=== Heat Pump Remote ===");
+    Serial.printf("\n=== Heat Pump Remote v%s ===\n", g_fwInfo.version);
 
     settingsInit();
+    otaRemoteInit();
     // sensorsInit/relaysInit/controlInit are no-ops in proxy implementations
 
     buzzerInit();
@@ -47,11 +51,14 @@ void setup() {
     wifiMqttInit();
 
     espnowRemoteInit();
+    webBegin();
 
     // Send settings to Controller so it is in sync from the start
     espnowSendSettings();
 
-    displayShowMessage("Heat Pump", "Remote v1.0", "Connecting...");
+    char verLine[24];
+    snprintf(verLine, sizeof(verLine), "Remote v%s", g_fwInfo.version);
+    displayShowMessage("Heat Pump", verLine, "Connecting...");
     delay(1500);
 
     Serial.println("[REMOTE] Ready.");
@@ -70,7 +77,9 @@ void loop() {
     buzzerLoop();
     menuLoop();
     espnowRemoteLoop();
+    otaRemoteLoop();
     wifiMqttLoop();
+    webLoop();
 
     if (now - g_lastDisplay >= T_DISPLAY_UPDATE_MS) {
         g_lastDisplay = now;

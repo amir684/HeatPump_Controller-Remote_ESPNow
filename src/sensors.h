@@ -21,3 +21,7 @@ void             sensorsInit();
 void             sensorsUpdate();      // call every T_SENSOR_READ_MS
 const SensorData& sensorsGet();
 float            sensorCorrectedWater(); // water + calibration offset (u02)
+
+// Controller only: exhaust sensor failed EXHAUST_FAIL_READINGS reads in a row
+// (a single bad read must not stop the compressor)
+bool             sensorExhaustFailed();

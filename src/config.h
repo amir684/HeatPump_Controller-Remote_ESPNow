@@ -80,6 +80,10 @@
 #define T_ANTIFREEZE_ON_MS        180000UL  // pump runs 3 min (antifreeze)
 #define T_ANTIFREEZE_CYCLE_MS    1800000UL  // antifreeze cycle = 30 min
 
+// ── Exhaust protection ─────────────────────────────────────
+#define EXHAUST_RESUME_HYST_C      10.0f    // resume only below U51 minus this
+#define EXHAUST_FAIL_READINGS          3    // consecutive bad reads (x5 s) before fail-safe stop
+
 // ── Application Intervals ──────────────────────────────────
 #define T_SENSOR_READ_MS      5000UL   // sensor read interval
 #define T_MQTT_PUBLISH_MS    10000UL   // MQTT state publish interval
@@ -96,6 +100,11 @@
 #define MQTT_DEVICE_ID       "heatpump_01"
 #define HA_DISCOVERY_PREFIX  "homeassistant"
 #define AP_NAME              "HeatPump-Setup"
+
+// ── Web page ───────────────────────────────────────────────
+#define WEB_HOSTNAME         "heatpump"     // http://heatpump.local
+#define WEB_USER             "admin"
+#define WEB_DEFAULT_PASS     "heatpump"     // change it from the web page
 
 // ── Parameter Defaults ─────────────────────────────────────
 #define DEF_SETPOINT   40.0f

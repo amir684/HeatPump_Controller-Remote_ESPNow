@@ -2,6 +2,7 @@
 #include "shared.h"
 #include "settings.h"
 #include "buzzer.h"
+#include "ota_remote.h"
 #include <WiFi.h>
 #include <esp_now.h>
 
@@ -24,6 +25,11 @@ static uint32_t        g_defrostSentAt   = 0;
 static volatile bool   g_sendFailed      = false;
 static volatile bool   g_lastWasCommand  = false;  // true = last send was a command (not settings)
 
+// Controller firmware info (from INFO packets)
+static portMUX_TYPE    g_infoMux         = portMUX_INITIALIZER_UNLOCKED;
+static char            g_ctrlVersion[16] = "";
+static char            g_ctrlBuilt[24]   = "";
+
 // ── Callbacks ───────────────────────────────────────────────
 static void onSent(const uint8_t* mac, esp_now_send_status_t status) {
     if (status != ESP_NOW_SEND_SUCCESS) g_sendFailed = true;
@@ -39,6 +45,19 @@ static void onReceive(const uint8_t* mac, const uint8_t* data, int len) {
         if (g_defrostPending && pkt.defrosting) {
             g_defrostPending = false;
         }
+    }
+    else if (type == PktType::OTA_ACK) {
+        otaRemoteOnAck(data, len);
+    }
+    else if (type == PktType::INFO && len >= (int)sizeof(InfoPacket)) {
+        InfoPacket info;
+        memcpy(&info, data, sizeof(info));
+        portENTER_CRITICAL(&g_infoMux);
+        memcpy(g_ctrlVersion, info.version, sizeof(g_ctrlVersion));
+        memcpy(g_ctrlBuilt,   info.built,   sizeof(g_ctrlBuilt));
+        g_ctrlVersion[sizeof(g_ctrlVersion) - 1] = '\0';
+        g_ctrlBuilt[sizeof(g_ctrlBuilt) - 1]     = '\0';
+        portEXIT_CRITICAL(&g_infoMux);
     }
 }
 
@@ -77,7 +96,8 @@ void espnowRemoteLoop() {
         }
     }
 
-    if (now - g_lastResync >= ESPNOW_RESYNC_INTERVAL_MS) {
+    // No settings resync while a firmware update is on the link
+    if (!otaRemoteBusy() && now - g_lastResync >= ESPNOW_RESYNC_INTERVAL_MS) {
         g_lastResync = now;
         espnowSendSettings();
     }
@@ -136,6 +156,19 @@ void espnowSendSettings() {
     }
     const uint8_t ctrlMac[] = CTRL_MAC_BYTES;
     esp_now_send(ctrlMac, reinterpret_cast<const uint8_t*>(&pkt), sizeof(pkt));
+}
+
+void espnowSendRaw(const void* data, size_t len) {
+    g_lastWasCommand = false;   // no "Send failed" toast for OTA traffic
+    const uint8_t ctrlMac[] = CTRL_MAC_BYTES;
+    esp_now_send(ctrlMac, reinterpret_cast<const uint8_t*>(data), len);
+}
+
+void espnowCtrlFirmware(char* version, size_t vLen, char* built, size_t bLen) {
+    portENTER_CRITICAL(&g_infoMux);
+    strlcpy(version, g_ctrlVersion, vLen);
+    strlcpy(built,   g_ctrlBuilt,   bLen);
+    portEXIT_CRITICAL(&g_infoMux);
 }
 
 // ── Connection status ────────────────────────────────────────

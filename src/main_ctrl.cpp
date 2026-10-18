@@ -12,16 +12,19 @@
 #include "relays.h"
 #include "control.h"
 #include "espnow_ctrl.h"
+#include "ota_ctrl.h"
+#include "fw_info.h"
 
 static uint32_t g_lastSensor = 0;
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n=== Heat Pump Controller (CTRL) ===");
+    Serial.printf("\n=== Heat Pump Controller (CTRL) v%s ===\n", g_fwInfo.version);
 
     settingsInit();
     sensorsInit();
     relaysInit();
+    otaCtrlInit();
     controlInit();
     espnowCtrlInit();
 
@@ -36,7 +39,8 @@ void loop() {
         sensorsUpdate();
     }
 
-    controlLoop();
+    otaCtrlLoop();
+    if (!otaCtrlActive()) controlLoop();   // relays stay off during an update
     espnowCtrlLoop();
 }
 

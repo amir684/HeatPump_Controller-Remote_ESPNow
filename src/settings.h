@@ -48,6 +48,7 @@ struct Settings {
     char mqttUser[32];
     char mqttPass[32];
     bool wifiEnabled;     // persist WiFi on/off across reboots
+    char webPass[32];     // web page password (user WEB_USER)
 };
 
 // ── Public interface ────────────────────────────────────────

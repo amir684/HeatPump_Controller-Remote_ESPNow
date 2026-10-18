@@ -4,6 +4,7 @@
 #include <math.h>
 
 static SensorData g_data;
+static uint8_t    g_exhaustFails = 0;   // consecutive failed exhaust reads
 
 // Read NTC: 3.3V → 10K series → ADC_pin → NTC → GND
 // Returns temperature in °C, or NTC_ERROR_VAL on failure
@@ -56,6 +57,8 @@ void sensorsUpdate() {
     v = readNTC(PIN_NTC_EXHAUST);
     g_data.exhaustOk = (v != NTC_ERROR_VAL);
     if (g_data.exhaustOk) g_data.exhaust = v;
+    if (g_data.exhaustOk)                         g_exhaustFails = 0;
+    else if (g_exhaustFails < EXHAUST_FAIL_READINGS) g_exhaustFails++;
 
     v = readNTC(PIN_NTC_OUTDOOR);
     g_data.outdoorOk = (v != NTC_ERROR_VAL);
@@ -68,4 +71,8 @@ const SensorData& sensorsGet() {
 
 float sensorCorrectedWater() {
     return g_data.water + settingsGet().u02;
+}
+
+bool sensorExhaustFailed() {
+    return g_exhaustFails >= EXHAUST_FAIL_READINGS;
 }

@@ -66,6 +66,25 @@ void controlForceDefrost() {
     espnowSetDefrostPending(true);
 }
 
+const char* hpStateName(HpState s) {
+    static const char* names[] = {
+        "offline","antifreeze_on","antifreeze_wait","startup_fan",
+        "comp_delay","heating","shutdown_comp","shutdown_fan",
+        "standby","defrost_stop","defrost_valve","defrosting",
+        "defrost_end_stop","defrost_end_valve","exhaust_protect"
+    };
+    unsigned i = static_cast<unsigned>(s);
+    return i < sizeof(names) / sizeof(names[0]) ? names[i] : "unknown";
+}
+
+const char* hpErrorName(HpError e) {
+    static const char* names[] = {
+        "none","E01_water","E02_pipe","E03_exhaust","E04_outdoor","EH_exhaust_alarm"
+    };
+    unsigned i = static_cast<unsigned>(e);
+    return i < sizeof(names) / sizeof(names[0]) ? names[i] : "unknown";
+}
+
 bool controlInSavePeriod() {
     // Evaluate locally — Remote has the settings + system time
     const Settings& s = settingsGet();

@@ -3,6 +3,8 @@
 #include "control.h"
 #include "sensors.h"
 #include "settings.h"
+#include "ota_ctrl.h"
+#include "fw_info.h"
 #include <WiFi.h>
 #include <esp_now.h>
 #include <esp_wifi.h>
@@ -12,6 +14,7 @@
 #define ESPNOW_TIMEOUT_MS        5000UL
 #define CHANNEL_SCAN_MS     600UL    // dwell per channel while scanning
 #define SCAN_AFTER_MS      5000UL    // scan if no successful ACK for 5 s
+#define INFO_INTERVAL_MS   5000UL    // firmware version broadcast to Remote
 
 // ── Channel scanning ─────────────────────────────────────────
 static const uint8_t k_channels[] = {1,2,3,4,5,6,7,8,9,10,11,12,13};
@@ -23,7 +26,10 @@ static uint32_t         g_lastSuccess    = 0;
 static bool             g_scanning       = false;
 
 static uint32_t g_lastSend      = 0;
+static uint32_t g_lastInfo      = 0;
 static uint32_t g_lastReceived  = 0;
+
+static const uint8_t k_remoteMac[] = REMOTE_MAC_BYTES;
 
 // ── Helpers ─────────────────────────────────────────────────
 template<typename T>
@@ -72,6 +78,16 @@ static void onSent(const uint8_t* mac, esp_now_send_status_t status) {
 
 static void onReceive(const uint8_t* mac, const uint8_t* data, int len) {
     if (len < 1) return;
+    // Only the paired Remote may command the heat pump or flash firmware
+    if (memcmp(mac, k_remoteMac, 6) != 0) return;
+
+    // Hearing the Remote proves the current channel is right
+    g_gotSuccess = true;
+
+    if (otaCtrlHandlePacket(data, len)) {
+        g_lastReceived = millis();
+        return;
+    }
 
     const PktType type = *reinterpret_cast<const PktType*>(data);
 
@@ -149,8 +165,9 @@ void espnowCtrlLoop() {
         g_scanning    = false;
     }
 
-    // Start scanning only if no successful ACK for SCAN_AFTER_MS
-    if (!g_scanning && (now - g_lastSuccess >= SCAN_AFTER_MS)) {
+    // Start scanning only if no successful ACK for SCAN_AFTER_MS.
+    // Never hop channels mid-update: a stalled transfer times out on its own.
+    if (!g_scanning && !otaCtrlActive() && (now - g_lastSuccess >= SCAN_AFTER_MS)) {
         g_scanning       = true;
         g_lastChanSwitch = now;  // give current channel one full dwell first
     }
@@ -160,6 +177,16 @@ void espnowCtrlLoop() {
         g_lastChanSwitch = now;
         g_chIdx = (g_chIdx + 1) % k_numChan;
         switchToChannel(g_chIdx);
+    }
+
+    if (now - g_lastInfo >= INFO_INTERVAL_MS) {
+        g_lastInfo = now;
+        InfoPacket info{};
+        info.type = PktType::INFO;
+        strncpy(info.version, g_fwInfo.version, sizeof(info.version) - 1);
+        strncpy(info.built,   g_fwInfo.built,   sizeof(info.built) - 1);
+        info.otaActive = otaCtrlActive();
+        esp_now_send(k_remoteMac, reinterpret_cast<const uint8_t*>(&info), sizeof(info));
     }
 
     if (now - g_lastSend < ESPNOW_SEND_INTERVAL_MS) return;
@@ -194,5 +221,5 @@ void espnowCtrlLoop() {
 
 // ── Connection status ────────────────────────────────────────
 bool espnowRemoteConnected() {
-    return (millis() - g_lastReceived) < ESPNOW_TIMEOUT_MS;
+    return g_lastReceived != 0 && (millis() - g_lastReceived) < ESPNOW_TIMEOUT_MS;
 }

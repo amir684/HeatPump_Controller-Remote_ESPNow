@@ -3,6 +3,7 @@
 #include "settings.h"
 #include "sensors.h"
 #include "relays.h"
+#include "ota_ctrl.h"
 #include <time.h>
 
 // ── State machine ───────────────────────────────────────────
@@ -80,21 +81,36 @@ static bool shouldStopDefrost() {
     return defRunMs >= (uint32_t)s.u33 * 60000UL;
 }
 
-static void checkExhaustProtection() {
+// Call while the compressor runs. Returns true if protection tripped
+// (state is now EXHAUST_PROTECT and the caller must stop processing).
+static bool checkExhaustProtection() {
     Settings& s = settingsGet();
     const SensorData& d = sensorsGet();
-    if (s.u50 == 0 || !d.exhaustOk) return;
+    if (s.u50 == 0) return false;
 
-    if (d.exhaust >= s.u51) {
-        // Stop compressor with 3-min protection
-        if (relayGet(Relay::COMP)) g_compStopMs = millis();
-        relaySet(Relay::COMP, false);
-        // U50=2: stop fan too; U50=1: fan keeps running to cool down
-        if (s.u50 == 2) relaySet(Relay::FAN, false);
-        valveSetHeating();
-        g_error = HpError::EH_EXHAUST_ALARM;
-        enterState(HpState::EXHAUST_PROTECT);
+    if (d.exhaustOk) {
+        if (d.exhaust < s.u51) return false;
+    } else if (!sensorExhaustFailed()) {
+        return false;   // a single bad read: keep running on the last good value
     }
+    // Over-temperature, or the sensor has been failed for EXHAUST_FAIL_READINGS
+    // reads in a row (fail-safe: the compressor would run unprotected)
+
+    // Stop compressor with 3-min protection
+    if (relayGet(Relay::COMP)) g_compStopMs = millis();
+    relaySet(Relay::COMP, false);
+    // U50=2: stop fan too; U50=1: fan keeps running to cool down
+    if (s.u50 == 2) relaySet(Relay::FAN, false);
+    // Valve is restored in EXHAUST_PROTECT after the pressure-equalise wait
+    enterState(HpState::EXHAUST_PROTECT);
+    return true;
+}
+
+static bool exhaustCooledDown() {
+    Settings& s = settingsGet();
+    const SensorData& d = sensorsGet();
+    if (s.u50 == 0) return true;
+    return d.exhaustOk && d.exhaust <= s.u51 - EXHAUST_RESUME_HYST_C;
 }
 
 static void checkSensorErrors() {
@@ -103,6 +119,7 @@ static void checkSensorErrors() {
     else if (!d.pipeOk)   { g_error = HpError::E02_PIPE_SENSOR; }
     else if (!d.exhaustOk){ g_error = HpError::E03_EXHAUST_SENSOR; }
     else if (!d.outdoorOk){ g_error = HpError::E04_OUTDOOR_SENSOR; }
+    else if (g_state == HpState::EXHAUST_PROTECT) { g_error = HpError::EH_EXHAUST_ALARM; }
     else                   { g_error = HpError::NONE; }
 }
 
@@ -112,8 +129,8 @@ void controlInit() {
     g_powerOnDelay= true;
 
     Settings& s = settingsGet();
-    if (s.u80 == 1) {
-        // Auto-restart: restore last state
+    if (s.u80 == 1 || otaCtrlResumed()) {
+        // Auto-restart (or reboot after a firmware update): restore last state
         if (s.systemOnline) {
             enterState(HpState::STANDBY);  // will re-evaluate heating need
         } else {
@@ -145,6 +162,14 @@ void controlSetOnline(bool online) {
     }
 }
 
+void controlSuspend() {
+    if (relayGet(Relay::COMP)) g_compStopMs = millis();
+    relaysAllOff();
+    if (g_state != HpState::OFFLINE) {
+        enterState(settingsGet().systemOnline ? HpState::STANDBY : HpState::OFFLINE);
+    }
+}
+
 void controlForceDefrost() {
     Settings& s = settingsGet();
     const SensorData& d = sensorsGet();
@@ -157,7 +182,8 @@ void controlForceDefrost() {
 
 bool controlInSavePeriod() {
     struct tm ti;
-    if (!getLocalTime(&ti)) return true;  // if no time, allow heating
+    // Timeout 0: the Controller has no NTP, so the default 5 s wait would stall the loop
+    if (!getLocalTime(&ti, 0)) return true;  // if no time, allow heating
 
     Settings& s = settingsGet();
     int nowMin = ti.tm_hour * 60 + ti.tm_min;
@@ -259,22 +285,23 @@ void controlLoop() {
         break;
 
     case HpState::COMP_DELAY:
-        if (!g_powerOnDelay && compProtectionExpired()) {
-            relaySet(Relay::COMP, true);
-            g_compStartMs = millis();
-            enterState(HpState::HEATING);
-        }
         // If heating no longer needed while waiting
         if (heatingDone()) {
             relaySet(Relay::FAN, false);
             valveSetHeating();
             enterState(HpState::SHUTDOWN_FAN);
+            break;
+        }
+        if (!g_powerOnDelay && compProtectionExpired()) {
+            relaySet(Relay::COMP, true);
+            g_compStartMs = millis();
+            enterState(HpState::HEATING);
         }
         break;
 
     // ── HEATING ──────────────────────────────────────────
     case HpState::HEATING:
-        checkExhaustProtection();
+        if (checkExhaustProtection()) break;
 
         // Check if defrost needed
         if (g_forceDefrost || shouldStartDefrost()) {
@@ -330,6 +357,7 @@ void controlLoop() {
     // ── ACTIVE DEFROST ────────────────────────────────────
     case HpState::DEFROSTING:
         // Pump stays on during defrost (heater on too if applicable)
+        if (checkExhaustProtection()) break;
         if (shouldStopDefrost()) {
             relaySet(Relay::COMP, false);
             g_compStopMs = millis();
@@ -355,9 +383,11 @@ void controlLoop() {
 
     // ── EXHAUST PROTECTION ────────────────────────────────
     case HpState::EXHAUST_PROTECT:
-        // Wait for 3-min compressor min-off, then resume heating normally
-        if (compProtectionExpired()) {
-            g_error = HpError::NONE;
+        // Valve may still be in defrost position — restore it once pressure equalises
+        if (stateAge() >= T_DEFROST_VALVE_WAIT_MS) valveSetHeating();
+
+        // Resume only after 3-min compressor min-off AND the exhaust has cooled
+        if (compProtectionExpired() && exhaustCooledDown()) {
             enterState(HpState::STANDBY);
         }
         break;

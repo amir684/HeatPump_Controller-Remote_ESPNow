@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 // ── Remote-side ESP-NOW ─────────────────────────────────────
 // Receives StatusPacket from Controller every 500 ms.
@@ -21,3 +22,9 @@ void espnowSendSettings();
 
 // Mark a forced defrost as pending — remote will retry until Controller confirms defrosting=true
 void espnowSetDefrostPending(bool pending);
+
+// Send an arbitrary packet to the Controller (OTA traffic)
+void espnowSendRaw(const void* data, size_t len);
+
+// Controller firmware version/build date; empty if never heard (old firmware)
+void espnowCtrlFirmware(char* version, size_t vLen, char* built, size_t bLen);
