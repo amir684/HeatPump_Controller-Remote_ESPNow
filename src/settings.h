@@ -57,6 +57,7 @@ void     settingsSave();       // saves to NVS and marks dirty
 void     settingsLoad();
 void     settingsFactoryReset();
 Settings& settingsGet();
+bool     settingsHaveSaved();  // false on a blank NVS (only defaults in memory)
 
 // Dirty flag — set by settingsSave(), cleared by main_remote after ESP-NOW sync
 bool     settingsIsDirty();

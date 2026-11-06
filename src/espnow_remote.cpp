@@ -129,6 +129,10 @@ void espnowSendCommand(CommandPacket& pkt) {
 }
 
 void espnowSendSettings() {
+#ifdef REMOTE_S3
+    // Blank NVS = defaults with systemOnline=false: sending them would switch the heating off
+    if (!settingsHaveSaved()) return;
+#endif
     g_lastWasCommand = false;
     const Settings& s = settingsGet();
     SettingsPacket pkt{};

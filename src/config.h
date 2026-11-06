@@ -54,11 +54,18 @@
 #define PIN_BTN_ENTER   25   // Confirm / enter submenu
 #define PIN_BTN_BACK    26   // Back / cancel
 
+#ifdef REMOTE_S3
+// ── S3 touch Remote: buzzer + comm LED from its own pin map ──
+#include "pins_s3.h"
+#define PIN_BUZZER      S3_BUZZER
+#define PIN_COMM_LED    S3_COMM_LED
+#else
 // ── Buzzer ──────────────────────────────────────────────────
 #define PIN_BUZZER      14   // Passive speaker via NPN transistor
 
 // ── Comm LED ─────────────────────────────────────────────────
 #define PIN_COMM_LED    17   // LED: ON when ESP-NOW signal lost
+#endif
 
 // ── NTC Parameters ─────────────────────────────────────────
 #define NTC_SERIES_R    10000.0f  // Series resistor value (Ohms)

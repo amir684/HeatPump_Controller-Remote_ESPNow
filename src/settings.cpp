@@ -116,5 +116,9 @@ Settings& settingsGet() {
     return g_settings;
 }
 
+bool settingsHaveSaved() {
+    return prefs.isKey("init");
+}
+
 bool settingsIsDirty()    { return g_dirty; }
 void settingsClearDirty() { g_dirty = false; }
